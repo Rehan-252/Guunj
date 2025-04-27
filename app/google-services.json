@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "171000426334",
+    "project_id": "guunj-c3086",
+    "storage_bucket": "guunj-c3086.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171000426334:android:ad9eea892c29910c6669cf",
+        "android_client_info": {
+          "package_name": "com.example.guunj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBS0vkWRU5jI5b8Oo3EeRDvBG2ppC3z1Bg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
