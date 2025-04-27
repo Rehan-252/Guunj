@@ -53,15 +53,15 @@ public class LoginFragment extends Fragment {
                 }
 
                 progressDialog.show();
-                auth.createUserWithEmailAndPassword(binding.loginEmail.getText().toString(),binding.loginPassword.getText().toString()).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                auth.signInWithEmailAndPassword(binding.loginEmail.getText().toString(),binding.loginPassword.getText().toString()).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                 progressDialog.dismiss();
                         if (task.isSuccessful()){
-                            Users user = new Users(binding.userName.getText().toString(), binding.loginEmail.getText().toString(), binding.loginPassword.getText().toString());
+                            Users user = new Users(binding.loginEmail.getText().toString(), binding.loginPassword.getText().toString());
                             String id = Objects.requireNonNull(task.getResult().getUser()).getUid();
                             database.getReference().child("Users").child(id).setValue(user);
-                            Toast.makeText(getActivity(), "Account Create Successfully ", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), "Account Login Successfully ", Toast.LENGTH_LONG).show();
 
                             Intent intent = new Intent(getActivity(), MainActivity.class);
                             startActivity(intent);
@@ -74,6 +74,12 @@ public class LoginFragment extends Fragment {
                 });
             }
         });
+
+        if (auth.getCurrentUser() != null){
+            Intent intent = new Intent(getActivity(), MainActivity.class);
+            startActivity(intent);
+            requireActivity().finish();
+        }
 
         return view;
     }

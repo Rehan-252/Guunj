@@ -13,4 +13,17 @@
         android:gravity="center"
         android:textSize="30sp"/>
 
+    <Button
+        android:id="@+id/signoutButton"
+        android:layout_width="150dp"
+        android:layout_height="80dp"
+        android:text="LOG-OUT"
+        android:textSize="23dp"
+        android:layout_marginTop="100dp"
+        android:layout_gravity="center"
+        android:textAllCaps="true"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:backgroundTint="#FF6D00" />
+
 </FrameLayout>

@@ -12,23 +12,14 @@
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
-        <EditText
-            android:id="@+id/userName"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginTop="80dp"
-            android:hint="Username"
-            android:paddingStart="16dp"
-            android:background="@drawable/customtext"
-            android:drawablePadding="10dp"
-            android:inputType="textPersonName" />
+
 
         <!-- Email Input -->
         <EditText
             android:id="@+id/loginEmail"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="100dp"
             android:hint="Email"
             android:paddingStart="16dp"
             android:background="@drawable/customtext"

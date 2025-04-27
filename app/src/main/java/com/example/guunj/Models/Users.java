@@ -12,7 +12,7 @@ public class Users {
         this.lastMessage = lastMessage;
     }
 
-    public Users (){}
+    public Users (String string, String s){}
     public Users(String fullName, String email, String password, String confirmPassword) {
         this.fullName = fullName;
         this.email = email;
@@ -21,7 +21,6 @@ public class Users {
     }
 
     public Users( String userName, String email, String password) {
-        this.userName = userName;
         this.email = email;
         this.password = password;
     }
