@@ -45,7 +45,19 @@ dependencies {
     implementation(libs.lifecycle.livedata.ktx)
     implementation(libs.lifecycle.viewmodel.ktx)
     implementation(libs.firebase.auth)
-    implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
+    // Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.google.firebase.auth)
+    implementation(libs.google.firebase.database)
+
+    // Credentials API (Google SignIn)
+    implementation(libs.credentials.v130beta01)
+    implementation(libs.credentials.play.services.auth.v130beta01)
+    implementation(libs.googleid)
+
+    //Facebook
+    implementation (libs.facebook.android.sdk)
+
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
