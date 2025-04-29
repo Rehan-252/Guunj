@@ -21,4 +21,8 @@
     <string name="log_in">LOG IN</string>
     <string name="password">Password</string>
     <string name="default_web_client_id">171000426334-dli34p7igsajau0nimu1el5mohvj7v1u.apps.googleusercontent.com</string>
+    <!--    faceboollogin -->
+    <string name="facebook_app_id">1035237488141430</string>
+    <string name="fb_login_protocol_scheme">fb1035237488141430</string>
+    <string name="facebook_client_token">53333bb2240115d2bafed110ffc6d4a6</string>
 </resources>

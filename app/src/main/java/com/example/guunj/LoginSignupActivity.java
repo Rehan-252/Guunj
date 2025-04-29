@@ -15,6 +15,8 @@ import androidx.fragment.app.FragmentTransaction;
 import com.example.guunj.databinding.ActivityLoginSignupBinding;
 import com.example.guunj.fragments.LoginFragment;
 import com.example.guunj.fragments.SignupFragment;
+import com.facebook.FacebookSdk;
+import com.facebook.appevents.AppEventsLogger;
 
 public class LoginSignupActivity extends AppCompatActivity {
 
@@ -31,6 +33,9 @@ public class LoginSignupActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        FacebookSdk.sdkInitialize(getApplicationContext());
+        AppEventsLogger.activateApp(this.getApplication());
 
         replaceFragment(new LoginFragment());
         binding.loginButton.setTextColor(getResources().getColor(android.R.color.black));
@@ -53,6 +58,8 @@ public class LoginSignupActivity extends AppCompatActivity {
                 binding.loginButton.setTextColor(getResources().getColor(android.R.color.darker_gray));
             }
         });
+
+
 
     }
     private  void replaceFragment(Fragment fragment){

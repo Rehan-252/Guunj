@@ -33,18 +33,28 @@ import com.example.guunj.MainActivity;
 import com.example.guunj.Models.Users;
 import com.example.guunj.R;
 import com.example.guunj.databinding.FragmentLoginBinding;
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 public class LoginFragment extends Fragment {
 
@@ -53,6 +63,7 @@ public class LoginFragment extends Fragment {
     FirebaseDatabase database;
     ProgressDialog progressDialog;
     CredentialManager credentialManager;
+    CallbackManager callbackManager;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -62,6 +73,7 @@ public class LoginFragment extends Fragment {
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         credentialManager = CredentialManager.create(requireContext());
+        callbackManager = CallbackManager.Factory.create();
 
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setTitle("Logging In");
@@ -122,11 +134,45 @@ public class LoginFragment extends Fragment {
                             public void onError(@NonNull GetCredentialException e) {
                                 Log.e(TAG, "Google sign-in failed", e);
                                 String errorMessage = e.getMessage() != null ? e.getMessage() : "Unknown error";
-                                Toast.makeText(getActivity(), "Google sign-in failed: " + errorMessage, Toast.LENGTH_SHORT).show();
+
+                                // Check for common "no account" message
+                                if (errorMessage.toLowerCase().contains("no eligible credentials") ||
+                                        errorMessage.toLowerCase().contains("no credentials available")) {
+                                    Toast.makeText(getActivity(), "Login failed: No Google account found on this device", Toast.LENGTH_LONG).show();
+                                } else {
+                                    Toast.makeText(getActivity(), "Google sign-in failed: " + errorMessage, Toast.LENGTH_SHORT).show();
+                                }
                             }
                         }
                 );
             }
+        });
+
+        // Facebook Login Button with OnClickListener
+        binding.facebookLogin.setOnClickListener(v -> {
+            // Trigger Facebook Login
+            LoginManager.getInstance().logInWithReadPermissions(requireActivity(), Arrays.asList("email", "public_profile"));
+
+            // Register the callback for the Facebook login process
+            LoginManager.getInstance().registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                    handleFacebookAccessToken(loginResult.getAccessToken());
+                }
+
+                @Override
+                public void onCancel() {
+                    Log.d(TAG, "facebook:onCancel");
+                    Toast.makeText(getActivity(), "Facebook login cancelled", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(@NonNull FacebookException error) {
+                    Log.d(TAG, "facebook:onError", error);
+                    Toast.makeText(getActivity(), "Facebook login failed: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         // Auto-login if already signed in
@@ -135,6 +181,20 @@ public class LoginFragment extends Fragment {
         }
 
         return view;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Check if user is signed in (non-null) and update UI accordingly.
+        FirebaseUser currentUser = auth.getCurrentUser();
+        updateUI(currentUser);
     }
     private void handleSignIn(Credential credential) {
         if (credential instanceof CustomCredential) {
@@ -154,6 +214,29 @@ public class LoginFragment extends Fragment {
         } else {
             Toast.makeText(getActivity(), "Credential is not of type CustomCredential", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void handleFacebookAccessToken(AccessToken token) {
+        Log.d(TAG, "handleFacebookAccessToken:" + token);
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        auth.signInWithCredential(credential)
+                .addOnCompleteListener((Executor) this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            // Sign in success, update UI with the signed-in user's information
+                            Log.d(TAG, "signInWithCredential:success");
+                            FirebaseUser user = auth.getCurrentUser();
+                            updateUI(user);
+                        } else {
+                            // If sign in fails, display a message to the user.
+                            Log.w(TAG, "signInWithCredential:failure", task.getException());
+                            Toast.makeText(getActivity(), "Authentication failed.",Toast.LENGTH_SHORT).show();
+                            updateUI(null);
+                        }
+                    }
+                });
     }
 
     private void firebaseAuthWithGoogle(String idToken) {
