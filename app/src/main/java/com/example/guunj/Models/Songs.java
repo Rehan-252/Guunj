@@ -1,15 +1,18 @@
 package com.example.guunj.Models;
 
+import android.net.Uri;
+
 public class Songs {
     String id,title, artist, duration;
     int thumbnailResId;
+    Uri albumUri;
 
-    public Songs(String id, String title, String artist, long duration, int thumbnailResId) {
+    public Songs(String id, String title, String artist, Uri albumUri) {
         this.id = id;
         this.title = title;
         this.artist = artist;
         this.duration = String.valueOf(duration);
-        this.thumbnailResId = thumbnailResId;
+        this.albumUri = albumUri;
     }
     public String getId() {
         return id;

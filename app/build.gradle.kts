@@ -58,6 +58,10 @@ dependencies {
     //Facebook
     implementation (libs.facebook.android.sdk)
 
+    //Storage
+    implementation (libs.glide)
+    annotationProcessor (libs.compiler)
+
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)

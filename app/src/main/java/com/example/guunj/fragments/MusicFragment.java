@@ -43,7 +43,7 @@ public class MusicFragment extends Fragment {
         binding.recyclerViewSongs.setItemViewCacheSize(10);
         binding.recyclerViewSongs.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        musicadapter = new Musicadapter(songList); // Constructor needs List<Songs>
+        musicadapter = new Musicadapter(getContext(), songList);
         binding.recyclerViewSongs.setAdapter(musicadapter);
 
         // Set total songs count
@@ -57,25 +57,48 @@ public class MusicFragment extends Fragment {
 
         Uri mediaUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String selection = MediaStore.Audio.Media.IS_MUSIC + "!= 0";
+        String[] projection = {
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.DURATION
+        };
 
-        String[] projection = {MediaStore.Audio.Media._ID,MediaStore.Audio.Media.TITLE,MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.ALBUM,MediaStore.Audio.Media.DURATION};
+        Cursor cursor = context.getContentResolver().query(
+                mediaUri,
+                projection,
+                selection,
+                null,
+                MediaStore.Audio.Media.TITLE + " ASC"
+        );
 
-        Cursor cursor = context.getContentResolver().query(mediaUri,projection,selection,null,MediaStore.Audio.Media.TITLE + " ASC",null);
-
-        if (cursor != null){
-            while (cursor.moveToNext()){
-                String titalC = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
-                String artistC = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
-                String albumC = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM));
+        if (cursor != null && cursor.moveToFirst()) {
+            do {
+                long id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media._ID));
+                String title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE));
+                String artist = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST));
                 long durationMs = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION));
-                long durationC = Long.parseLong(String.format(Locale.getDefault(), "%d:%02d", TimeUnit.MILLISECONDS.toMinutes(durationMs),TimeUnit.MILLISECONDS.toSeconds(durationMs)));
 
-                int thumbnailC = R.drawable.ic_music;
-                songsList.add(new Songs(titalC,artistC,albumC,durationC,thumbnailC));
-            }
+                // Format duration as mm:ss
+                String durationFormatted = String.format(
+                        Locale.getDefault(),
+                        "%d:%02d",
+                        TimeUnit.MILLISECONDS.toMinutes(durationMs),
+                        TimeUnit.MILLISECONDS.toSeconds(durationMs) % 60
+                );
+
+                // Build content URI for album art
+                Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
+
+                // Add to list
+                songsList.add(new Songs(title, artist, durationFormatted, contentUri));
+
+            } while (cursor.moveToNext());
+
             cursor.close();
         }
+
         return songsList;
     }
+
 }

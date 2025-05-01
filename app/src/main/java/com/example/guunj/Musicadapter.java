@@ -1,11 +1,13 @@
 package com.example.guunj;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.guunj.Models.Songs;
 import com.example.guunj.databinding.ItemMusicBinding;
 
@@ -14,8 +16,10 @@ import java.util.List;
 public class Musicadapter extends RecyclerView.Adapter<Musicadapter.MusicViewHolder> {
 
     private final List<Songs> songList;
+    private final Context context;
 
-    public Musicadapter(List<Songs> songList) {
+    public Musicadapter(Context context, List<Songs> songList) {
+        this.context = context;
         this.songList = songList;
     }
 
@@ -33,7 +37,11 @@ public class Musicadapter extends RecyclerView.Adapter<Musicadapter.MusicViewHol
         holder.binding.songTitle.setText(song.getTitle());
         holder.binding.songArtist.setText(song.getArtist());
         holder.binding.songDuration.setText(song.getDuration());
-        holder.binding.songThumbnail.setImageResource(song.getThumbnailResId());
+
+        Glide.with(context)
+                .load(song.getArtist())
+                .placeholder(R.drawable.music)
+                .into(holder.binding.songThumbnail);
     }
 
     @Override
