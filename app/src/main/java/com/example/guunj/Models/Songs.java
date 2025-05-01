@@ -1,14 +1,22 @@
 package com.example.guunj.Models;
 
 public class Songs {
-    String title, artist, duration;
+    String id,title, artist, duration;
     int thumbnailResId;
 
-    public Songs(String title, String artist, String duration, int thumbnailResId) {
+    public Songs(String id, String title, String artist, long duration, int thumbnailResId) {
+        this.id = id;
         this.title = title;
         this.artist = artist;
-        this.duration = duration;
+        this.duration = String.valueOf(duration);
         this.thumbnailResId = thumbnailResId;
+    }
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getTitle() {

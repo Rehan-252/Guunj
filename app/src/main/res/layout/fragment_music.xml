@@ -27,6 +27,7 @@
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_marginBottom="12dp"
+        android:contentDescription="@string/search_icon"
         app:cardCornerRadius="24dp"
         app:cardElevation="2dp"
         android:backgroundTint="#F5F5F5">
