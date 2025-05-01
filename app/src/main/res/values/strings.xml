@@ -19,10 +19,19 @@
     <string name="sign_up">SIGN UP</string>
     <string name="forgot_password">FORGOT PASSWORD?</string>
     <string name="log_in">LOG IN</string>
+    <string name="MusicTitle">Music</string>
+    <string name="artist_name">Artist Name</string>
+    <string name="song_title">Song Title</string>
+    <string name="timeDuration">00:00</string>
+    <string name="song_thumbnail_desc">Song thumbnail</string>
     <string name="password">Password</string>
     <string name="default_web_client_id">171000426334-dli34p7igsajau0nimu1el5mohvj7v1u.apps.googleusercontent.com</string>
     <!--    faceboollogin -->
     <string name="facebook_app_id">1035237488141430</string>
     <string name="fb_login_protocol_scheme">fb1035237488141430</string>
     <string name="facebook_client_token">53333bb2240115d2bafed110ffc6d4a6</string>
+    <string name="explore_music">Explore Music</string>
+    <string name="song_thumbnail">Song Thumbnail</string>
+    <string name="total_songs">Total songs</string>
+    <string name="search_songs">Search songs...</string>
 </resources>

@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -14,6 +15,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.credentials.Credential;
 import androidx.credentials.CredentialManager;
 import androidx.credentials.CredentialManagerCallback;
@@ -30,7 +33,9 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.example.guunj.MainActivity;
+import android.Manifest;
 import com.example.guunj.Models.Users;
+import com.example.guunj.Musicadapter;
 import com.example.guunj.R;
 import com.example.guunj.databinding.FragmentLoginBinding;
 import com.facebook.AccessToken;
@@ -58,6 +63,7 @@ import java.util.concurrent.Executor;
 
 public class LoginFragment extends Fragment {
 
+    private static final int STORAGE_PERMISSION_CODE = 101;
     FragmentLoginBinding binding;
     FirebaseAuth auth;
     FirebaseDatabase database;
@@ -69,7 +75,7 @@ public class LoginFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentLoginBinding.inflate(inflater, container, false);
         View view = binding.getRoot();
-
+        checkStoragePermission();
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         credentialManager = CredentialManager.create(requireContext());
@@ -264,4 +270,75 @@ public class LoginFragment extends Fragment {
         startActivity(intent);
         requireActivity().finish();
     }
+
+    private void checkStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ requires separate media permissions
+            if ((ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) ||
+                    (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) ||
+                    (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_VIDEO) != PackageManager.PERMISSION_GRANTED)) {
+
+                // Requesting separate media permissions for Android 13+
+                ActivityCompat.requestPermissions(requireActivity(),
+                        new String[]{
+                                Manifest.permission.READ_MEDIA_AUDIO,
+                                Manifest.permission.READ_MEDIA_IMAGES,
+                                Manifest.permission.READ_MEDIA_VIDEO
+                        },
+                        STORAGE_PERMISSION_CODE);
+            } else {
+                Toast.makeText(getContext(), "Media Permissions Already Granted", Toast.LENGTH_SHORT).show();
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // For Android 10 (API 29) to Android 12 (API 32)
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                // Requesting READ_EXTERNAL_STORAGE permission for Android 10-12
+                ActivityCompat.requestPermissions(requireActivity(),
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        STORAGE_PERMISSION_CODE);
+            } else {
+                Toast.makeText(getContext(), "Storage Permission Already Granted", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            // For Android 9 (Pie) and below
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                // Requesting READ_EXTERNAL_STORAGE permission for Android 9 and below
+                ActivityCompat.requestPermissions(requireActivity(),
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                        STORAGE_PERMISSION_CODE);
+            } else {
+                Toast.makeText(getContext(), "Storage Permission Already Granted", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    // Handle permissions result
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == STORAGE_PERMISSION_CODE) {
+            boolean granted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    granted = false;
+                    break;
+                }
+            }
+
+            if (granted) {
+                Toast.makeText(getContext(), "Permission Granted", Toast.LENGTH_SHORT).show();
+                // Load or access media here
+            } else {
+                // Handle permission denial
+                Toast.makeText(getContext(), "Permission Denied", Toast.LENGTH_SHORT).show();
+                // Optionally show rationale if necessary
+                if (ActivityCompat.shouldShowRequestPermissionRationale(requireActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    // Explain why the permission is needed (for example, in a dialog)
+                    Toast.makeText(getContext(), "Storage permission is required to access media files.", Toast.LENGTH_LONG).show();
+                }
+            }
+        }
+    }
+
 }
