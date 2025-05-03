@@ -36,6 +36,8 @@ public class MusicFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentMusicBinding.inflate(inflater, container, false);
         View view = binding.getRoot();
+
+
         // Dummy song list for now
         List<Songs> songList = fechsongfromdevice(requireContext());
         // Set up RecyclerView

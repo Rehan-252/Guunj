@@ -1,9 +1,9 @@
 package com.example.guunj;
 
-
-import static com.example.guunj.fragments.LoginFragment.STORAGE_PERMISSION_CODE;
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -32,6 +32,7 @@ import java.util.ArrayList;
 public class LoginSignupActivity extends AppCompatActivity {
 
     ActivityLoginSignupBinding binding;
+    private static final int STORAGE_PERMISSION_CODE = 1001;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +40,9 @@ public class LoginSignupActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         binding = ActivityLoginSignupBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        checkStoragePermission();
+
+        checkAndRequestStoragePermissions();
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.loginSignup), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -71,8 +74,6 @@ public class LoginSignupActivity extends AppCompatActivity {
             }
         });
 
-
-
     }
     private  void replaceFragment(Fragment fragment){
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -81,55 +82,65 @@ public class LoginSignupActivity extends AppCompatActivity {
         fragmentTransaction.commit();
     }
 
-    private void checkStoragePermission() {
+    private void checkAndRequestStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Android 13+ (API 33+)
-            String[] requiredPermissions = new String[]{
+            String[] permissions = {
                     Manifest.permission.READ_MEDIA_AUDIO,
                     Manifest.permission.READ_MEDIA_IMAGES,
                     Manifest.permission.READ_MEDIA_VIDEO
             };
+            requestMissingPermissions(permissions);
 
-            ArrayList<String> missingPermissions = new ArrayList<>();
-            for (String permission : requiredPermissions) {
-                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-                    missingPermissions.add(permission);
-                }
-            }
-
-            if (!missingPermissions.isEmpty()) {
-                // Request only the missing permissions
-                ActivityCompat.requestPermissions(this, missingPermissions.toArray(new String[0]), STORAGE_PERMISSION_CODE);
-            }
-            // No else block: only show toast if ALL were granted in onRequestPermissionsResult
         } else {
-            // For Android 12 and below
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        STORAGE_PERMISSION_CODE);
-            }
+            String[] permissions = {
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+            };
+            requestMissingPermissions(permissions);
         }
     }
 
-    // Handle permissions result
+    private void requestMissingPermissions(String[] permissions) {
+        ArrayList<String> missing = new ArrayList<>();
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                missing.add(permission);
+            }
+        }
+
+        if (!missing.isEmpty()) {
+            ActivityCompat.requestPermissions(this,
+                    missing.toArray(new String[0]),
+                    STORAGE_PERMISSION_CODE);
+        } else {
+            Toast.makeText(this, "Permissions already granted", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == STORAGE_PERMISSION_CODE) {
             boolean allGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
+            boolean permanentlyDenied = false;
+
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                     allGranted = false;
-                    break;
+                    if (!ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[i])) {
+                        permanentlyDenied = true;
+                    }
                 }
             }
+
             if (allGranted) {
-                Toast.makeText(this, "Media Permissions Granted", Toast.LENGTH_SHORT).show();
-                // You can now load media
+                Toast.makeText(this, "Permissions granted", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Permission Denied", Toast.LENGTH_SHORT).show();
+                if (permanentlyDenied) {
+                    Toast.makeText(this, "Permission permanently denied. Please enable in settings.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
