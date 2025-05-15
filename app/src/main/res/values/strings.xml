@@ -35,4 +35,9 @@
     <string name="total_songs">Total songs</string>
     <string name="search_songs">Search songs...</string>
     <string name="search_icon">Search icon</string>
+    <string name="backbutton">backButton</string>
+    <string name="playpausebutton">playPauseButton</string>
+    <string name="previousbutoon">previousButoon</string>
+    <string name="songimage">songImage</string>
+    <string name="nextbutton">nextButton</string>
 </resources>

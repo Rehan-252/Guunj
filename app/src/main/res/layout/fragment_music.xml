@@ -6,9 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:paddingBottom="70dp"
     android:padding="12dp"
+    android:clipToPadding="false"
     android:background="#FFFFFF"
     tools:context=".fragments.MusicFragment">
+
+
 
     <!-- Title -->
     <TextView
@@ -81,7 +85,5 @@
         android:id="@+id/recyclerViewSongs"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingBottom="16dp" />
+        android:layout_weight="1"/>
 </LinearLayout>

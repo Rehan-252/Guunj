@@ -41,9 +41,16 @@ public class MainActivity extends AppCompatActivity {
             bottomNav.setPadding(0, 0, 0, systemBars.bottom);  // Push BottomNav down
             return insets;
         });
+        String targetFragment = getIntent().getStringExtra("fragment");
 
+        if ("music".equals(targetFragment)) {
+            replaceFragment(new MusicFragment());
+            binding.bottomnavigation.setSelectedItemId(R.id.music);
+        } else {
+            replaceFragment(new HomeFragment());
+            binding.bottomnavigation.setSelectedItemId(R.id.home);
+        }
 
-        replaceFragment(new HomeFragment());
         binding.bottomnavigation.setBackground(null);
 
         binding.bottomnavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
