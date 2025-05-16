@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    android:padding="16dp">
+    android:layout_gravity="center"
+    android:padding="20dp">
 
 
     <!-- Back Button -->
@@ -66,8 +67,9 @@
     <!-- SeekBar -->
     <SeekBar
         android:id="@+id/songSeekBar"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:max="100"
         android:progress="0"
         android:thumbTint="#000000"
         android:progressTint="#000000"

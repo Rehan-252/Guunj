@@ -1,8 +1,8 @@
 package com.example.guunj;
 
 import android.content.Context;
-import android.content.Intent;
 import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
@@ -45,17 +45,15 @@ public class Musicadapter extends RecyclerView.Adapter<Musicadapter.MusicViewHol
         holder.binding.songDuration.setText(song.getDuration());
 
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(context, PlayerActivity.class);
-            intent.putExtra("title", song.getTitle());
-            intent.putExtra("artist", song.getArtist());
-            intent.putExtra("duration", song.getDuration());
-            intent.putExtra("uri", song.getAlbumUri().toString());
-            context.startActivity(intent);
+            if (listener != null) {
+                listener.onSongClick(song);
+            }
         });
 
         MediaMetadataRetriever mmr = new MediaMetadataRetriever();
         try {
-            mmr.setDataSource(context, song.getAlbumUri());
+            mmr.setDataSource(context, Uri.parse(String.valueOf(song.getAlbumUri())));
+
             byte[] art = mmr.getEmbeddedPicture();
             if (art != null) {
                 Glide.with(context)

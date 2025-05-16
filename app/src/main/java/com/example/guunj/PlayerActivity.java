@@ -1,158 +1,155 @@
 package com.example.guunj;
 
-import android.content.Intent;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
+import android.os.Handler;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import com.bumptech.glide.Glide;
+import com.example.guunj.Models.Songs;
 import com.example.guunj.databinding.ActivityPlayerBinding;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class PlayerActivity extends AppCompatActivity {
 
-    ActivityPlayerBinding binding;
-    MediaPlayer mediaPlayer;
-    private static final String TAG = "PlayerActivity";
-    boolean isPlay = false;
+    private ActivityPlayerBinding binding;
+    private MediaPlayer mediaPlayer;
+    private ArrayList<Songs> songList;
+    private int position = 0;
+    private Handler handler = new Handler();
+    private Runnable updateSeekbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Enable full screen (edge-to-edge)
-        EdgeToEdge.enable(this);
         binding = ActivityPlayerBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        // Retrieve song details from the launching Intent
-        Intent intent = getIntent();
-        String title = intent.getStringExtra("title");
-        String artist = intent.getStringExtra("artist");
-        String duration = intent.getStringExtra("duration");
-        String uriString = intent.getStringExtra("uri");
+        songList = getIntent().getParcelableArrayListExtra("songList");
+        position = getIntent().getIntExtra("position", 0);
 
-        // Set title, artist, and duration; provide fallbacks if null
-        binding.songTitle.setText((title != null) ? title : "Unknown Title");
-        binding.songArtist.setText((artist != null) ? artist : "Unknown Artist");
-        binding.totalDuration.setText((duration != null) ? duration : "00:00");
-
-        // Parse the song URI
-        Uri songUri = null;
-        try {
-            if (uriString != null) {
-                songUri = Uri.parse(uriString);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error parsing song URI", e);
-        }
-
-        // Load album art using MediaMetadataRetriever
-        if (songUri != null) {
-            android.media.MediaMetadataRetriever mmr = new android.media.MediaMetadataRetriever();
-            try {
-                mmr.setDataSource(this, songUri);
-                byte[] art = mmr.getEmbeddedPicture();
-
-                if (art != null) {
-                    Glide.with(this)
-                            .asBitmap()
-                            .load(art)
-                            .placeholder(R.drawable.music)
-                            .into(binding.songImage);
-                } else {
-                    binding.songImage.setImageResource(R.drawable.music); // fallback if no album art
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                binding.songImage.setImageResource(R.drawable.music); // fallback if error
-            } finally {
-                try {
-                    mmr.release();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+        if (songList != null && !songList.isEmpty()) {
+            playSongAt(position);
         } else {
-            binding.songImage.setImageResource(R.drawable.music);
+            // handle empty or null list
+            Toast.makeText(this, "No songs received", Toast.LENGTH_SHORT).show();
+            finish();
+            return;// Optional: close activity if no data
         }
 
+        binding.playPauseBtn.setOnClickListener(v -> togglePlayPause());
+        binding.nextBtn.setOnClickListener(v -> playNext());
+        binding.prevBtn.setOnClickListener(v -> playPrevious());
+        binding.backBtn.setOnClickListener(v -> finish());
 
-        // Attempt to initialize and start MediaPlayer if we have a valid song URI
-        if (songUri != null) {
-            mediaPlayer = new MediaPlayer();
-            try {
-                mediaPlayer.setDataSource(this, songUri);
-                mediaPlayer.prepare();
-                mediaPlayer.start();
-                isPlay = true;
-                binding.playPauseBtn.setImageResource(R.drawable.play1);
-                // Optionally, update the play/pause button icon here if your layout supports it
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Unable to play the selected song", Toast.LENGTH_SHORT).show();
-                Log.e(TAG, "MediaPlayer error: " + e.getMessage());
-            }
-        } else {
-            Toast.makeText(this, "Invalid song URI", Toast.LENGTH_SHORT).show();
-        }
-
-        binding.playPauseBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mediaPlayer != null){
-                    if(mediaPlayer.isPlaying()){
-                        mediaPlayer.pause();
-                        binding.playPauseBtn.setImageResource(R.drawable.pause);
-                        isPlay = false;
-                    }
-                    else {
-                        mediaPlayer.start();
-                        binding.playPauseBtn.setImageResource(R.drawable.play1);
-                        isPlay = true;
-                    }
+        binding.songSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser && mediaPlayer != null) {
+                    mediaPlayer.seekTo(progress);
                 }
             }
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+    }
 
-        // Handle window insets for devices with notches or gesture navigation
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+    private void playSongAt(int position) {
+        if (position < 0 || position >= songList.size()) return;
 
-        binding.backBtn.setOnClickListener(new View.OnClickListener() {
+        Songs song = songList.get(position);
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
+
+        mediaPlayer = MediaPlayer.create(this, Uri.parse(String.valueOf(song.getSongUri())));
+        mediaPlayer.start();
+
+        updateUI(song);
+        setupSeekBar();
+        updatePlayPauseIcon();
+    }
+
+    private void updateUI(Songs song) {
+        binding.songTitle.setText(song.getTitle());
+        binding.songArtist.setText(song.getArtist());
+        binding.totalDuration.setText(song.getDuration());
+
+        if (song.getAlbumUri() != null && !song.getAlbumUri().isEmpty()) {
+            Glide.with(this).load(Uri.parse(song.getAlbumUri())).into(binding.songImage);
+        } else {
+            binding.songImage.setImageResource(R.drawable.ic_music); // fallback image
+        }
+    }
+
+    private void setupSeekBar() {
+        binding.songSeekBar.setMax(mediaPlayer.getDuration());
+
+        updateSeekbar = new Runnable() {
             @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(PlayerActivity.this, MainActivity.class);
-                intent.putExtra("fragment", "music");
-                intent.setFlags(intent.FLAG_ACTIVITY_CLEAR_TOP | intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-                finish();
+            public void run() {
+                if (mediaPlayer != null) {
+                    binding.songSeekBar.setProgress(mediaPlayer.getCurrentPosition());
+                    binding.currentTime.setText(formatDuration(mediaPlayer.getCurrentPosition()));
+                    handler.postDelayed(this, 1000);
+                }
             }
-        });
+        };
+        handler.post(updateSeekbar);
+    }
+
+    private String formatDuration(int millis) {
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) % 60;
+        return String.format("%02d:%02d", minutes, seconds);
+    }
+
+    private void updatePlayPauseIcon() {
+        if (mediaPlayer.isPlaying()) {
+            binding.playPauseBtn.setImageResource(R.drawable.play1); // your pause icon
+        } else {
+            binding.playPauseBtn.setImageResource(R.drawable.pause); // your play icon
+        }
+    }
+
+    private void togglePlayPause() {
+        if (mediaPlayer == null) return;
+
+        if (mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+        } else {
+            mediaPlayer.start();
+        }
+        updatePlayPauseIcon();
+    }
+
+    private void playNext() {
+        position = (position + 1) % songList.size();
+        playSongAt(position);
+    }
+
+    private void playPrevious() {
+        position = (position - 1 + songList.size()) % songList.size();
+        playSongAt(position);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Clean up the MediaPlayer to avoid memory leaks
         if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) {
-                mediaPlayer.stop();
-            }
+            if (mediaPlayer.isPlaying()) mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
+        }
+        if (handler != null && updateSeekbar != null) {
+            handler.removeCallbacks(updateSeekbar);
         }
     }
 }

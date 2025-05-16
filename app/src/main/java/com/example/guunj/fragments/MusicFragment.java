@@ -42,10 +42,8 @@ public class MusicFragment extends Fragment {
 
         musicadapter = new Musicadapter(getContext(), songList,song -> {
             Intent intent = new Intent(requireContext(), PlayerActivity.class);
-            intent.putExtra("title", song.getTitle());
-            intent.putExtra("artist", song.getArtist());
-            intent.putExtra("duration", song.getDuration());
-            intent.putExtra("uri", song.getAlbumUri().toString());
+            intent.putParcelableArrayListExtra("songList", new ArrayList<>(songList));
+            intent.putExtra("position", songList.indexOf(song));
             startActivity(intent);
         });
         binding.recyclerViewSongs.setAdapter(musicadapter);
@@ -90,7 +88,8 @@ public class MusicFragment extends Fragment {
 
                     Uri contentUri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id);
 
-                    songsList.add(new Songs(String.valueOf(id), title, artist, durationFormatted, contentUri));
+                    songsList.add(new Songs(String.valueOf(id), title, artist, durationFormatted, contentUri, contentUri));
+
                 } while (cursor.moveToNext());
             }
         }
