@@ -1,9 +1,7 @@
 package com.example.guunj;
 
 import android.Manifest;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -111,8 +109,6 @@ public class LoginSignupActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     missing.toArray(new String[0]),
                     STORAGE_PERMISSION_CODE);
-        } else {
-            Toast.makeText(this, "Permissions already granted", Toast.LENGTH_SHORT).show();
         }
     }
 

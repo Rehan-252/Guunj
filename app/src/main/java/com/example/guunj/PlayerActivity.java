@@ -1,5 +1,6 @@
 package com.example.guunj;
 
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -69,12 +70,29 @@ public class PlayerActivity extends AppCompatActivity {
             mediaPlayer.release();
         }
 
-        mediaPlayer = MediaPlayer.create(this, Uri.parse(String.valueOf(song.getSongUri())));
-        mediaPlayer.start();
+        new Thread(() -> {
+            try {
+                MediaPlayer tempPlayer = new MediaPlayer();
+                tempPlayer.setDataSource(this, Uri.parse(String.valueOf(song.getSongUri())));
+                tempPlayer.setOnPreparedListener(mp -> {
+                    mediaPlayer = mp;
+                    mediaPlayer.start();
 
-        updateUI(song);
-        setupSeekBar();
-        updatePlayPauseIcon();
+                    runOnUiThread(() -> {
+                        updateUI(song);
+                        setupSeekBar();
+                        updatePlayPauseIcon();
+                    });
+                });
+                tempPlayer.prepareAsync();
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() ->
+                        Toast.makeText(this, "Error playing song", Toast.LENGTH_SHORT).show()
+                );
+            }
+        }).start();
+
     }
 
     private void updateUI(Songs song) {
@@ -82,23 +100,41 @@ public class PlayerActivity extends AppCompatActivity {
         binding.songArtist.setText(song.getArtist());
         binding.totalDuration.setText(song.getDuration());
 
-        if (song.getAlbumUri() != null && !song.getAlbumUri().isEmpty()) {
-            Glide.with(this).load(Uri.parse(song.getAlbumUri())).into(binding.songImage);
-        } else {
-            binding.songImage.setImageResource(R.drawable.ic_music); // fallback image
+        try {
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(this, song.getSongUri());
+            byte[] art = mmr.getEmbeddedPicture();
+
+            if (art != null) {
+                Glide.with(this).asBitmap().load(art).placeholder(R.drawable.music).into(binding.songImage);
+            } else {
+                binding.songImage.setImageResource(R.drawable.music);
+            }
+
+            mmr.release();
+        } catch (Exception e) {
+            binding.songImage.setImageResource(R.drawable.music);
+            e.printStackTrace();
         }
     }
 
     private void setupSeekBar() {
+        if (mediaPlayer == null) return;
+
         binding.songSeekBar.setMax(mediaPlayer.getDuration());
 
         updateSeekbar = new Runnable() {
             @Override
             public void run() {
-                if (mediaPlayer != null) {
-                    binding.songSeekBar.setProgress(mediaPlayer.getCurrentPosition());
-                    binding.currentTime.setText(formatDuration(mediaPlayer.getCurrentPosition()));
-                    handler.postDelayed(this, 1000);
+                try {
+                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                        int currentPos = mediaPlayer.getCurrentPosition();
+                        binding.songSeekBar.setProgress(currentPos);
+                        binding.currentTime.setText(formatDuration(currentPos));
+                        handler.postDelayed(this, 1000);
+                    }
+                } catch (IllegalStateException e) {
+                    e.printStackTrace(); // Optional: log or handle error
                 }
             }
         };
@@ -143,13 +179,18 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mediaPlayer != null) {
-            if (mediaPlayer.isPlaying()) mediaPlayer.stop();
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
+
         if (handler != null && updateSeekbar != null) {
             handler.removeCallbacks(updateSeekbar);
         }
+
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.stop();
+            }
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
     }
+
 }

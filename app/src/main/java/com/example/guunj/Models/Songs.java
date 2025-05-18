@@ -71,4 +71,5 @@ public class Songs implements Parcelable {
     public void setDuration(String duration) { this.duration = duration; }
     public void setAlbumUri(Uri albumUri) { this.albumUri = albumUri; }
     public void setSongUri(Uri songUri) { this.songUri = songUri; }
+    
 }
